@@ -1,7 +1,9 @@
 package com.example.tianhao.notes;
 
+import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
+import android.content.SharedPreferences;
 import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -14,17 +16,29 @@ import android.widget.ArrayAdapter;
 import android.widget.ListView;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 
 public class MainActivity extends AppCompatActivity {
     static ArrayList<String> notes = new ArrayList<>();
     static ArrayAdapter arrayAdapter;
+    SharedPreferences sharedPreferences;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        sharedPreferences = getApplicationContext().getSharedPreferences("com.example.tianhao.notes", Context.MODE_PRIVATE);
         ListView listView = findViewById(R.id.listView);
-        notes.add("Example Note");
+
+        HashSet<String > set = (HashSet<String>)sharedPreferences.getStringSet("notes", null);
+
+        if(set == null){
+            notes.add("Example Note");
+        }else{
+            notes = new ArrayList(set);
+        }
+
         arrayAdapter = new ArrayAdapter(this, android.R.layout.simple_list_item_1, notes);
         listView.setAdapter(arrayAdapter);
 
@@ -49,6 +63,9 @@ public class MainActivity extends AppCompatActivity {
                             public void onClick(DialogInterface dialog, int which) {
                                 notes.remove(position);
                                 arrayAdapter.notifyDataSetChanged();
+
+                                HashSet<String > set = new HashSet<>(MainActivity.notes);
+                                sharedPreferences.edit().putStringSet("notes", set).apply();
                             }
                         })
                         .setNegativeButton("No", null)
